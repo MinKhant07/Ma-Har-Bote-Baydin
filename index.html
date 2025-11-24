@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>မြန်မာ ဗေဒင် မဟာဘုတ် အဖွား တွက်ချက်ခြင်း</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap');
+        body {
+            font-family: 'Padauk', sans-serif;
+            background-color: #f7f3e9; 
+            overflow-y: auto; 
+        }
+        .page-container {
+            min-height: 100vh;
+            padding: 1rem; 
+        }
+        .mahahbote-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            border: 2px solid #5d4037;
+        }
+        .grid-item {
+            border: 1px solid #795548;
+            padding: 0.5rem; 
+            text-align: center;
+            background-color: #fff8e1;
+            transition: all 0.3s ease;
+            height: 6rem; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        @media (min-width: 768px) {
+            .grid-item {
+                padding: 1rem;
+                height: 8rem;
+            }
+        }
+        .grid-item.highlight {
+            background-color: #ffcc80; 
+            font-weight: bold;
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-color: #e65100;
+        }
+        .grid-item .text-xs {
+            font-size: 0.65rem; 
+        }
+        @media (min-width: 768px) {
+            .grid-item .text-xs {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body class="page-container flex items-start justify-center">
+
+    <!-- API Key Configuration Modal -->
+    <div id="apiConfigModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-lg w-full border-t-4 border-blue-500">
+            <h2 class="text-xl font-bold text-blue-800 mb-4">Gemini API Key ထည့်သွင်းရန်</h2>
+            <p class="text-sm text-gray-600 mb-4">ဗေဒင်ဟောကိန်းရယူရန်အတွက် Gemini API Key လိုအပ်ပါသည်။</p>
+            <div id="apiModalError" class="hidden p-2 mb-4 text-red-700 bg-red-100 rounded text-sm"></div>
+            
+            <label for="inputApiKey" class="block text-gray-700 font-semibold mb-2 text-sm">သင့်ရဲ့ Gemini API Key</label>
+            <input type="text" id="inputApiKey" class="w-full p-3 border border-gray-300 rounded-lg mb-4 text-gray-700 focus:ring-blue-500 focus:border-blue-500" placeholder="AIzaSy..." >
+            <p class="text-xs text-gray-500 mb-4">* Blank ထားခဲ့ပါက Default Key ကို ပြန်လည်အသုံးပြုပါမည်။</p>
+
+            <div class="flex justify-end space-x-3">
+                <button onclick="hideApiConfigModal()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                    ပိတ်မည်
+                </button>
+                <button onclick="saveApiKey()" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
+                    သိမ်းဆည်းမည်
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Info Modal -->
+    <div id="userInfoModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-40 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full border-t-4 border-yellow-500">
+            <h2 class="text-2xl font-bold text-yellow-800 mb-4 text-center">ဗေဒင်မေးသူ၏ အချက်အလက်</h2>
+            <div id="modalError" class="hidden p-2 mb-4 text-red-700 bg-red-100 rounded"></div>
+            
+            <label for="inputName" class="block text-gray-700 font-semibold mb-2">နာမည် (Name)</label>
+            <input type="text" id="inputName" class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-yellow-500 focus:border-yellow-500" placeholder="သင်၏ နာမည်ကို ရိုက်ထည့်ပါ" required>
+
+            <label class="block text-gray-700 font-semibold mb-2">ကျား/မ (Gender)</label>
+            <div class="flex space-x-6 mb-6 justify-center">
+                <label class="flex items-center p-2 bg-blue-100 rounded-lg cursor-pointer hover:bg-blue-200 transition">
+                    <input type="radio" name="inputGender" value="male" class="form-radio text-blue-600" checked>
+                    <span class="ml-2 text-gray-700 font-medium">အမျိုးသား (Male)</span>
+                </label>
+                <label class="flex items-center p-2 bg-pink-100 rounded-lg cursor-pointer hover:bg-pink-200 transition">
+                    <input type="radio" name="inputGender" value="female" class="form-radio text-pink-600">
+                    <span class="ml-2 text-gray-700 font-medium">အမျိုးသမီး (Female)</span>
+                </label>
+            </div>
+
+            <button onclick="submitUserInfo()" class="w-full px-4 py-3 bg-yellow-700 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-800 transition duration-300 transform hover:scale-[1.01]">
+                အချက်အလက် ပေးပြီး တွက်ချက်မည်
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-4xl w-full bg-white p-6 md:p-10 rounded-xl shadow-2xl border-t-8 border-yellow-700 mt-4 mb-10 relative">
+        <!-- API Key Configuration Button (Top Right Corner) -->
+        <button id="apiKeyConfigBtn" onclick="showApiConfigModal()" class="absolute top-4 right-4 text-xs font-semibold px-3 py-1 rounded-full text-white transition duration-300 shadow-md bg-gray-400">
+            API Key Setup
+        </button>
+
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-yellow-800 mb-6 mt-6">
+            မဟာဘုတ် အဖွား တွက်ချက်စနစ်
+        </h1>
+        <p class="text-center text-gray-600 mb-8">
+            မွေးသက္ကရာဇ်ကို **အင်္ဂလိပ်ခုနှစ်** ဖြင့် ထည့်သွင်းပြီး သင့်ရဲ့ အဖွား (Ruling House) ကို တွက်ချက်နိုင်ပါတယ်။
+        </p>
+
+        <!-- Input Section -->
+        <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 mb-8 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <label for="birthDate" class="text-lg font-medium text-yellow-900 whitespace-nowrap">
+                မွေးသက္ကရာဇ် (Birth Date):
+            </label>
+            <input type="date" id="birthDate" class="p-3 border border-yellow-500 rounded-lg w-full md:w-auto text-gray-700 focus:ring-yellow-500 focus:border-yellow-500 shadow-inner" required>
+            <button onclick="calculateMahabote()" class="w-full md:w-auto px-6 py-3 bg-yellow-700 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-800 transition duration-300 transform hover:scale-105">
+                တွက်ချက်ရန် (Calculate)
+            </button>
+        </div>
+
+        <!-- Result Display Section -->
+        <div id="resultContainer" class="hidden mt-8">
+             <!-- Personalized Greeting -->
+            <div id="personalizedGreeting" class="text-xl md:text-2xl text-center font-bold text-red-700 mb-6 p-4 bg-red-50 border-red-300 rounded-lg border-2">
+                <!-- Greeting will go here -->
+            </div>
+            
+            <!-- Summary Card -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                <div class="p-4 bg-green-100 rounded-lg text-center shadow">
+                    <p class="text-sm text-green-700">မွေးနေ့ဂြိုဟ်</p>
+                    <p id="displayDay" class="text-xl sm:text-2xl font-bold text-green-900 mt-1"></p>
+                </div>
+                <div class="p-4 bg-blue-100 rounded-lg text-center shadow">
+                    <p class="text-sm text-blue-700">သက်တမ်း</p>
+                    <p id="displayAge" class="text-xl sm:text-2xl font-bold text-blue-900 mt-1"></p>
+                </div>
+                <div class="p-4 bg-red-100 rounded-lg text-center shadow">
+                    <p class="text-sm text-red-700">အဖွား</p>
+                    <p id="displayAphwar" class="text-xl sm:text-2xl font-bold text-red-900 mt-1"></p>
+                </div>
+            </div>
+
+            <!-- Mahabote Chart -->
+            <h2 class="text-2xl font-semibold text-yellow-800 mb-4 border-b pb-2">မဟာဘုတ် ဇယား</h2>
+            <div class="flex justify-center">
+                <div id="mahaboteGrid" class="mahahbote-grid w-full md:w-3/4 lg:w-2/3">
+                    <!-- Grid items will be injected here by JS -->
+                </div>
+            </div>
+
+            <!-- Aphwar Meaning -->
+            <div class="mt-8 p-6 bg-yellow-50 border-l-4 border-yellow-600 rounded-lg shadow-inner">
+                <h3 class="text-xl font-bold text-yellow-800 mb-2">အဖွား၏ အဓိပ္ပာယ်</h3>
+                <p id="meaning" class="text-gray-700"></p>
+            </div>
+            
+            <!-- Horoscope Generation Feature -->
+            <div class="mt-8">
+                <button id="generateHoroscopeBtn" onclick="generateHoroscope()" class="w-full px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition duration-300 transform hover:scale-105">
+                    ဗေဒင်ဟောကိန်း (Horoscope Reading) ရယူရန်
+                </button>
+            </div>
+
+            <!-- Horoscope Reading Display -->
+            <div id="horoscopeReadingBox" class="mt-8 p-6 bg-white border border-red-300 rounded-xl shadow-lg">
+                <h3 class="text-2xl font-bold text-red-800 mb-4 border-b pb-2">ဗေဒင်ဆရာ၏ ဟောစာတမ်း</h3>
+                <div id="readingContent" class="text-gray-700 whitespace-pre-wrap">
+                    ဟောကိန်း ရယူရန် ခလုတ်ကို နှိပ်ပါ။
+                </div>
+            </div>
+
+            <!-- Error Message Box -->
+            <div id="errorBox" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Variables for API Key and User Info ---
+        const DEFAULT_API_KEY = "AIzaSyBm6nk5L5xJYCmuRdbb6d7uNpFG467ypfo"; 
+        let currentApiKey = DEFAULT_API_KEY; 
+        
+        let userName = '';
+        let userGender = '';
+
+        // --- Mahabote Logic & Constants ---
+        const API_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+        
+        const dayNamesBurmese = [
+            null,
+            "တနင်္ဂနွေ", "တနင်္လာ", "အင်္ဂါ", "ဗုဒ္ဓဟူး", 
+            "ကြာသပတေး", "သောကြာ", "စနေ"      
+        ];
+
+        const houseNamesBurmese = [
+            null, 
+            { name: "အဓိပတိ (A-dei-pa-ti)", meaning: "အာဏာ၊ အောင်မြင်မှု၊ ခေါင်းဆောင်မှု၊ ဩဇာတိက္ကမကြီးမားခြင်း (Authority, Success, Leadership, Great Influence)" }, // 1
+            { name: "အထွန်း (A-htoon)", meaning: "စည်းစိမ်၊ ဥစ္စာ၊ ပေါကြွယ်ဝမှု၊ စီးပွားတိုးတက်ခြင်း (Wealth, Fortune, Abundance, Business Growth)" }, // 2
+            { name: "ရာဇ (Yarzah)", meaning: "ဂုဏ်သိက္ခာ၊ ရာထူး၊ အရှိန်အဝါ၊ မင်းစိုးရာဇာချစ်ခင်ခြင်း (Honor, Position, Prestige, Favor of Rulers/Officials)" }, // 3
+            { name: "မရဏ (Ma-ra-na)", meaning: "သေဆုံးခြင်း၊ ဆုံးရှုံးခြင်း၊ ရောဂါဘယ၊ စွန့်ပစ်ရခြင်း (Death, Loss, Illness, Abandonment)" }, // 4
+            { name: "သုခု (Thu-khu)", meaning: "ချမ်းသာ၊ ပျော်ရွှင်မှု၊ သက်သာချောင်ချိမှု၊ စိတ်ချမ်းသာကိုယ်ကျန်းမာခြင်း (Happiness, Comfort, Ease, Mental and Physical Well-being)" }, // 5
+            { name: "ပတိ (Pa-ti)", meaning: "အိမ်ထောင်ဖက်၊ မိတ်ဆွေ၊ ဆက်ဆံရေး၊ လူမှုပေါင်းသင်းဆက်ဆံရေး ကောင်းခြင်း (Spouse, Friend, Relationships, Good Social Connections)" }, // 6
+            { name: "ကုန်း (Kone)", meaning: "အခက်အခဲ၊ ကြိုးစားအားထုတ်မှု၊ ပင်ပန်းမှု၊ ရုန်းကန်ရခြင်း (Hardship, Effort, Struggle, Need to strive)" }, // 7
+        ];
+
+        const houseVisualOrder = [2, 1, 3, 6, 0, 4, 5, 7, 0];
+        const houseHouseNames = [null, "အဓိပတိ", "အထွန်း", "ရာဇ", "မရဏ", "သုခု", "ပတိ", "ကုန်း"];
+
+        const positiveModulo = (n, m) => {
+            return ((n % m) + m) % m;
+        };
+        
+        // --- API Key Management Functions ---
+
+        function initializeApiKey() {
+            try {
+                const storedKey = localStorage.getItem('gemini_api_key');
+                if (storedKey && storedKey.trim() !== "") {
+                    currentApiKey = storedKey;
+                    console.log("Loaded API key from storage");
+                } else {
+                    // Explicitly set default if storage is empty
+                    currentApiKey = DEFAULT_API_KEY;
+                    console.log("Using default API key");
+                }
+            } catch (e) {
+                console.warn("Local Storage not accessible, using default key.", e);
+                currentApiKey = DEFAULT_API_KEY;
+            }
+            updateApiKeyButtonText();
+        }
+
+        function updateApiKeyButtonText() {
+            const button = document.getElementById('apiKeyConfigBtn');
+            // Check if current key matches default
+            if (currentApiKey === DEFAULT_API_KEY) {
+                button.textContent = "Default Key Active";
+                button.className = "absolute top-4 right-4 text-xs font-semibold px-3 py-1 rounded-full text-white transition duration-300 shadow-md bg-green-600";
+            } else {
+                button.textContent = "Custom Key Active";
+                button.className = "absolute top-4 right-4 text-xs font-semibold px-3 py-1 rounded-full text-white transition duration-300 shadow-md bg-blue-600";
+            }
+        }
+
+        function showApiConfigModal() {
+            const input = document.getElementById('inputApiKey');
+            const error = document.getElementById('apiModalError');
+            error.classList.add('hidden');
+            // Don't show the default key in the input box to avoid confusion, 
+            // unless it's a custom key the user entered previously.
+            if (currentApiKey !== DEFAULT_API_KEY) {
+                input.value = currentApiKey;
+            } else {
+                input.value = '';
+            }
+            document.getElementById('apiConfigModal').classList.remove('hidden');
+        }
+
+        function hideApiConfigModal() {
+            document.getElementById('apiConfigModal').classList.add('hidden');
+        }
+
+        function saveApiKey() {
+            const newKey = document.getElementById('inputApiKey').value.trim();
+            
+            if (!newKey) {
+                // If empty, revert to default
+                currentApiKey = DEFAULT_API_KEY;
+                try {
+                    localStorage.removeItem('gemini_api_key'); // Clear custom key
+                } catch (e) { console.warn("Storage error", e); }
+            } else {
+                currentApiKey = newKey;
+                try {
+                     localStorage.setItem('gemini_api_key', newKey);
+                } catch (e) {
+                    console.error("Local Storage error:", e);
+                    alert("Browser setting prevents saving the key permanently, but it will work for this session.");
+                }
+            }
+           
+            hideApiConfigModal();
+            updateApiKeyButtonText();
+        }
+        
+        // --- User Info Modal Functions ---
+
+        function showUserInfoModal() {
+            document.getElementById('userInfoModal').classList.remove('hidden');
+        }
+
+        function submitUserInfo() {
+            const inputName = document.getElementById('inputName').value.trim();
+            const modalError = document.getElementById('modalError');
+            
+            if (inputName === '') {
+                modalError.textContent = "ကျေးဇူးပြု၍ နာမည်ကို ရိုက်ထည့်ပေးပါ။";
+                modalError.classList.remove('hidden');
+                return;
+            }
+
+            const selectedGender = document.querySelector('input[name="inputGender"]:checked');
+            if (!selectedGender) {
+                modalError.textContent = "ကျား/မ ကို ရွေးချယ်ပေးပါ။";
+                modalError.classList.remove('hidden');
+                return;
+            }
+
+            userName = inputName;
+            userGender = selectedGender.value;
+            modalError.classList.add('hidden');
+            document.getElementById('userInfoModal').classList.add('hidden');
+        }
+        
+        // --- API Utility Function with Exponential Backoff ---
+        async function fetchWithExponentialBackoff(url, options, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    
+                    if (response.status === 429 && i < retries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; 
+                        continue;
+                    }
+                    
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        // Create a more descriptive error
+                        let msg = `API Error (${response.status})`;
+                        if(response.status === 400) msg += ": Invalid API Key or Request.";
+                        if(response.status === 403) msg += ": API Key valid but permission denied.";
+                        throw new Error(msg + ` Details: ${errorBody}`);
+                    }
+                    return response.json();
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error);
+                    if (i < retries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                    } else {
+                        throw error; // Re-throw final error
+                    }
+                }
+            }
+        }
+
+        // --- Calculation & Generation Logic ---
+
+        function calculateMahabote() {
+            if (!userName || !userGender) {
+                document.getElementById('birthDate').value = '';
+                showUserInfoModal();
+                return;
+            }
+
+            const birthDateInput = document.getElementById('birthDate').value;
+            const resultContainer = document.getElementById('resultContainer');
+            const errorBox = document.getElementById('errorBox');
+            const greetingDiv = document.getElementById('personalizedGreeting');
+
+            errorBox.classList.add('hidden');
+            document.getElementById('readingContent').innerHTML = `ဟောကိန်း ရယူရန် ခလုတ်ကို နှိပ်ပါ။`; 
+
+            if (!birthDateInput) {
+                errorBox.textContent = "ကျေးဇူးပြု၍ မွေးသက္ကရာဇ်ကို ထည့်သွင်းပါ။";
+                errorBox.classList.remove('hidden');
+                resultContainer.classList.add('hidden');
+                greetingDiv.classList.add('hidden');
+                return;
+            }
+
+            const birthDate = new Date(birthDateInput + 'T00:00:00');
+            const today = new Date();
+
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDifference = today.getMonth() - birthDate.getMonth();
+            if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            const Y = age;
+
+            if (Y < 0) {
+                 errorBox.textContent = "ထည့်သွင်းထားသော မွေးသက္ကရာဇ်သည် အနာဂတ်နေ့စွဲ ဖြစ်နေသည်။";
+                 errorBox.classList.remove('hidden');
+                 resultContainer.classList.add('hidden');
+                 greetingDiv.classList.add('hidden');
+                 return;
+            }
+
+            let birthDayJS = birthDate.getDay();
+            const D = (birthDayJS === 0) ? 1 : birthDayJS + 1; 
+
+            const S = positiveModulo(Y, 7); 
+            const H = positiveModulo(D - S - 1, 7) + 1; 
+            const aphwarHouse = houseNamesBurmese[H];
+
+            const planetHouses = new Array(8).fill(null); 
+            for (let P = 1; P <= 7; P++) {
+                const H_index = positiveModulo(P - S - 1, 7) + 1;
+                const isBirthDayPlanet = P === D;
+                
+                let planetLabel = dayNamesBurmese[P];
+                if (isBirthDayPlanet) {
+                    planetLabel += " (နိစ္စ)";
+                }
+                
+                planetHouses[H_index] = {
+                    house: houseNamesBurmese[H_index].name,
+                    planet: planetLabel,
+                    isAphwar: H_index === H 
+                };
+            }
+            
+            const salutation = userGender === 'female' ? "သမီးလေး" : "သားလေး";
+            greetingDiv.textContent = `${salutation} ${userName} ${salutation}ရဲ့ မဟာဘုတ်ကို အောင်လံထူစစ်သူကြီးပွဲ တိုင်ထူပြီး တွက်ပေးမယ်နော်။`;
+            greetingDiv.classList.remove('hidden');
+
+            document.getElementById('displayDay').textContent = dayNamesBurmese[D];
+            document.getElementById('displayAge').textContent = `${Y} နှစ်`;
+            document.getElementById('displayAphwar').textContent = aphwarHouse.name.split(' ')[0].trim();
+            document.getElementById('meaning').textContent = aphwarHouse.meaning.split('(')[0].trim(); 
+            
+            resultContainer.classList.remove('hidden');
+
+            const mahaboteGrid = document.getElementById('mahaboteGrid');
+            mahaboteGrid.innerHTML = ''; 
+
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('grid-item');
+
+                const H_index_to_render = houseVisualOrder[i];
+                
+                if (H_index_to_render === 0) {
+                    cell.classList.add('bg-gray-200', 'text-gray-500', 'font-light');
+                    cell.innerHTML = `
+                        <p class="text-sm">ဂါရဂါ/စတ္တာရီ</p>
+                        <p class="text-xs"> (အသုံးမပြု)</p>
+                    `;
+                } else {
+                    const planetObj = planetHouses[H_index_to_render];
+                    if (planetObj.isAphwar) {
+                        cell.classList.add('highlight');
+                    }
+                    const houseName = houseHouseNames[H_index_to_render];
+                    cell.innerHTML = `
+                        <p class="text-sm font-semibold text-yellow-800">${houseName}</p>
+                        <p class="text-lg sm:text-xl font-extrabold text-gray-900">${planetObj.planet}</p>
+                        <p class="text-xs text-gray-500">${planetObj.isAphwar ? '⭐ အဖွား' : ''}</p>
+                    `;
+                }
+                mahaboteGrid.appendChild(cell);
+            }
+        }
+
+        async function generateHoroscope() {
+            const readingContentDiv = document.getElementById('readingContent');
+            const generateBtn = document.getElementById('generateHoroscopeBtn');
+            const aphwarMeaningFull = houseNamesBurmese.find(h => h && h.name.includes(document.getElementById('displayAphwar').textContent))?.meaning || '';
+            
+            const birthDay = document.getElementById('displayDay').textContent;
+            const currentAge = document.getElementById('displayAge').textContent;
+            const aphwarHouse = document.getElementById('displayAphwar').textContent;
+            
+            if (!birthDay || !currentAge || !aphwarHouse || document.getElementById('resultContainer').classList.contains('hidden')) {
+                readingContentDiv.innerHTML = "တွက်ချက်မှုရလဒ်များကို အရင်ဆုံးတွက်ချက်ပေးပါ။";
+                return;
+            }
+
+            // Debug: Check Key
+            console.log("Using API Key:", currentApiKey ? "Key Present" : "Key Missing");
+
+            if (!currentApiKey) {
+                readingContentDiv.innerHTML = `<p class="text-red-700">API Key မရှိပါ။ ကျေးဇူးပြု၍ ညာဘက်အပေါ်ထောင့်ရှိ API Key Setup တွင် Key ထည့်ပါ။</p>`;
+                return;
+            }
+
+            readingContentDiv.innerHTML = `
+                <div class="flex items-center justify-center space-x-2 text-red-600">
+                    <svg class="animate-spin h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p>ဗေဒင်ဟောကိန်းကို တွက်ချက်နေပါသည်...</p>
+                </div>
+            `;
+            generateBtn.disabled = true;
+
+            const userTitle = userGender === 'female' ? "သမီးလေး" : "သားလေး";
+
+            const systemPrompt = `သင်သည် မြန်မာ့ရိုးရာ မဟာဘုတ်ဗေဒင်ပညာရှင် (ဆရာ) တစ်ဦးအဖြစ် ဆောင်ရွက်ရမည်။ အဖြေကို မြန်မာဘာသာဖြင့်သာ ရေးသားရမည်။ သုံးစွဲသူကို ${userTitle} ${userName} ဟု ရင်းနှီးစွာ နာမ်စားဖြင့် သုံးနှုန်း၍ ဗေဒင်ဟောရမည်။ စကားပြောဟန်မှာ လေးစားဖွယ်၊ သေသပ်ပြီး ရိုးရာဗေဒင်ဆရာ၏ ဟန်ပန်အတိုင်း ဖြစ်ရမည်။ တွက်ချက်ရရှိသော 'အဖွား' အိမ်၏ အဓိကသဘောသဘာဝကို အခြေခံ၍ ကျန်းမာရေး၊ စီးပွားရေး၊ လူမှုရေး၊ မိသားစုရေးရာနှင့် လက်ရှိသက်တမ်းကာလအတွက် အကျိုးရှိမည့် အကြံပြုချက်များကို သင့်လျော်သလို ခြုံငုံသုံးသပ်ပေးပါ။ ဟောစာတမ်းကို အားပေးသည့်သဘော၊ ကောင်းမွန်သည့်သဘောဖြင့် အဆုံးသတ်ပေးပါ။ အဖွား၏ အမည်အပြည့်အစုံကို မြန်မာလို (ဥပမာ- 'အဓိပတိ အဖွား' စသည်ဖြင့်) အစဦးတွင် ထည့်သွင်းဖော်ပြပေးပါ။`;
+            
+            const userQuery = `မဟာဘုတ် တွက်ချက်ရလဒ်များမှာ အောက်ပါအတိုင်းဖြစ်ပါသည်-
+မွေးနေ့ဂြိုဟ် (နိစ္စဂြိုဟ်): ${birthDay}
+လက်ရှိသက်တမ်း: ${currentAge}
+အဖွား (A-phwar) အိမ်: ${aphwarHouse}
+အဖွား၏ အဓိပ္ပာယ် အနှစ်ချုပ်: ${aphwarMeaningFull}
+
+ဤအချက်အလက်များပေါ် မူတည်၍ ${userTitle} ${userName} အတွက် ဤကာလအတွက် အကျိုးပေးမည့် ဟောစာတမ်းကို အသေးစိတ် ရေးသားပေးပါ။`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            const apiUrl = `${API_URL_BASE}?key=${currentApiKey}`;
+
+            try {
+                const result = await fetchWithExponentialBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "ဟောကိန်း တွက်ချက်၍ မရပါ။ စနစ်အား ခေတ္တခဏ ပြန်လည်စစ်ဆေးနေပါသည်။";
+                readingContentDiv.innerHTML = `<p class="leading-relaxed">${text.replace(/\n/g, '<br>')}</p>`;
+
+            } catch (error) {
+                console.error("Generation Error:", error);
+                readingContentDiv.innerHTML = `<p class="text-red-700">Error: ${error.message}</p>`;
+                // If default key failed, prompt user
+                if (currentApiKey === DEFAULT_API_KEY) {
+                     readingContentDiv.innerHTML += `<p class="text-sm text-gray-600 mt-2">Default Key အလုပ်မလုပ်ပါ။ ကျေးဇူးပြု၍ ကိုယ်ပိုင် Key ထည့်သွင်းကြည့်ပါ။</p>`;
+                }
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+        
+        window.onload = () => {
+            initializeApiKey(); 
+            showUserInfoModal(); 
+        };
+    </script>
+
+</body>
+</html>
